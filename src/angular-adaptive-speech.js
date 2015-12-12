@@ -118,11 +118,18 @@ adaptive.provider('$speechCorrection', function() {
 
 adaptive.provider('$speechSynthetis', function() {
 
-  this.corsProxyServer = 'http://www.corsproxy.com/';
-
+  // Default
+  var serverUrlDefault = 'http://www.corsproxy.com/translate.google.com/translate_tts?ie=UTF-8&q={text}&tl={lang}';
+  
   this.$get = function() {
 
-    var corsProxyServer = this.corsProxyServer;
+    var serverUrl = serverUrlDefault;
+    var applyServerUrlPattern = function (corsProxyServer, params) {
+      return corsProxyServer.replace(/{[^{}]+}/g, function(key) {
+         return window.encodeURIComponent(params[key.replace(/[{}]+/g, "")]) || "";
+      });
+    };
+
     var justSpoke = false;
 
     /**
@@ -161,7 +168,12 @@ adaptive.provider('$speechSynthetis', function() {
         window.speechSynthesis.speak(msg); 
       } else {
 
-        var audioURL = [corsProxyServer, 'translate.google.com/translate_tts?ie=UTF-8&q=', text , '&tl=', lang].join('');
+        var audioURLParam = { 
+          lang: lang,
+          text: text
+        };
+
+        var audioURL = applyServerUrlPattern(serverUrl, audioURLParam);
         var audio = new Audio();
 
         audio.addEventListener('play', function() {
@@ -176,6 +188,7 @@ adaptive.provider('$speechSynthetis', function() {
 
         audio.autoplay = true;
         audio.src = audioURL; 
+
       }
     };
 
@@ -190,6 +203,10 @@ adaptive.provider('$speechSynthetis', function() {
 
       recognised: function(){
         justSpoke = false;
+      },
+      
+      setServerUrl: function(newServerUrl) {
+        serverUrl = newServerUrl;
       }
     };
   };
