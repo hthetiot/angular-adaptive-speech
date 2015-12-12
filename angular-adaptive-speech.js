@@ -148,21 +148,41 @@ adaptive.provider('$speechSynthetis', function() {
         return false;
       }
 
-      var audioURL = [corsProxyServer, 'translate.google.com/translate_tts?ie=UTF-8&q=', text , '&tl=', lang].join('');
-      var audio = new Audio();
+      if (window.SpeechSynthesisUtterance && window.speechSynthesis) {
 
-      audio.addEventListener('play', function() {
-      }, false);
+        var msg = new window.SpeechSynthesisUtterance();
+        var voices = window.speechSynthesis.getVoices();
+        msg.voice = voices[10]; // Note: some voices don't support altering params
+        msg.voiceURI = 'native';
+        msg.volume = 1; // 0 to 1
+        msg.rate = 1; // 0.1 to 10
+        msg.pitch = 2; //0 to 2
+        msg.text = text;
+        msg.lang = 'en-US';
 
-      audio.addEventListener('ended', function() {
-        justSpoke = true;
-      }, false);
+        msg.onend = function(e) {
+          justSpoke = true;
+        };
 
-      audio.addEventListener('error', function() {
-      }, false);
+        window.speechSynthesis.speak(msg); 
+      } else {
 
-      audio.autoplay = true;
-      audio.src = audioURL;
+        var audioURL = [corsProxyServer, 'translate.google.com/translate_tts?ie=UTF-8&q=', text , '&tl=', lang].join('');
+        var audio = new Audio();
+
+        audio.addEventListener('play', function() {
+        }, false);
+
+        audio.addEventListener('ended', function() {
+          justSpoke = true;
+        }, false);
+
+        audio.addEventListener('error', function() {
+        }, false);
+
+        audio.autoplay = true;
+        audio.src = audioURL; 
+      }
     };
 
     return {
