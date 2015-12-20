@@ -3,7 +3,7 @@ module.exports = function (grunt) {
 
   // Default task.
   grunt.registerTask('default', ['karma', 'jshint']);
-  grunt.registerTask('build', ['karma', 'jshint', 'concat', 'uglify']);
+  grunt.registerTask('build', ['jshint', 'concat', 'uglify']);
 
   var karmaConfig = function(configFile, customOptions) {
     var options = { configFile: configFile, keepalive: true };

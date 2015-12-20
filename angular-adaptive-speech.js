@@ -4,6 +4,12 @@
  * Copyright (c) 2014 Jan Antala
  */
 
+/*!
+ * angular-adaptive-speech v0.3.1
+ * The MIT License
+ * Copyright (c) 2014 Jan Antala
+ */
+
 (function() {
 
 var callCommands = function(tasks, DEST_LANG, utterance, reference){
@@ -159,19 +165,21 @@ adaptive.provider('$speechSynthetis', function() {
 
         var msg = new window.SpeechSynthesisUtterance();
         var voices = window.speechSynthesis.getVoices();
-        msg.voice = voices[10]; // Note: some voices don't support altering params
+        msg.voice = voices[1]; // Note: some voices don't support altering params
         msg.voiceURI = 'native';
-        msg.volume = 1; // 0 to 1
-        msg.rate = 1; // 0.1 to 10
-        msg.pitch = 2; //0 to 2
+        //msg.volume = 1; // 0 to 1
+        //msg.rate = 1; // 0.1 to 10
+        //msg.pitch = 2; //0 to 2
         msg.text = text;
-        msg.lang = 'en-US';
+        msg.lang = lang || 'en-US';
 
         msg.onend = function(e) {
           justSpoke = true;
         };
 
-        window.speechSynthesis.speak(msg); 
+        setTimeout(function () {
+          window.speechSynthesis.speak(msg); 
+        });
       } else {
 
         var audioURLParam = { 
@@ -255,15 +263,20 @@ adaptive.provider('$speechRecognition', function() {
       this.stop = function() { this.onerror({'code': 0, 'error': 'speech recognition is not supported'}); }.bind(this);
     };
 
-    window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition || SpeechRecognitionMock;
+    window.SpeechRecognition = window.SpeechRecognition ||
+                          window.webkitSpeechRecognition ||
+                          window.mozSpeechRecognition ||
+                          window.msSpeechRecognition ||
+                          window.oSpeechRecognition || SpeechRecognitionMock;
 
     var recognizer;
 
     var init = function(){
+
       recognizer = new window.SpeechRecognition();
       recognizer.continuous = true;
       recognizer.interimResults = true;
-      recognizer.maxAlternatives = 3;
+      recognizer.maxAlternatives = 5;
 
       recognizer.onresult = function(e) {
         if (onresult) {
@@ -341,12 +354,10 @@ adaptive.provider('$speechRecognition', function() {
 
     var onstart, onerror;
 
-    var onend = function(e){
-      payingAttention = false;
-      recognizer = null;
+    var onend = function(e) {
     };
 
-    var onresult = function(e){
+    var onresult = function(e) {
       if (e.results.length) {
         var result = e.results[e.resultIndex];
         if (result.isFinal) {
@@ -357,7 +368,6 @@ adaptive.provider('$speechRecognition', function() {
           }
 
           var utterance = result[0].transcript.trim();
-
           if (payingAttention) {
             command(utterance);
           }
